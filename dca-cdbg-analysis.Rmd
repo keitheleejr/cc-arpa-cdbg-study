@@ -1,10 +1,13 @@
 ---
-title: "Camden County DCA CDBG Survey Results"
+title: "Camden County Community Development Block Grant Survey Methodology and Results"
 author: "Dr. Keith Lee & Dr. Joseph Robbins"
-affiliaton: "Valdosta State University"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  bookdown::pdf_document2
+affiliaton: Valdosta State University
 fontsize: 12pt
+header-includes:
+  - \usepackage{longtable}
 ---
 
 ```{r setup, include=FALSE}
@@ -18,55 +21,132 @@ library(readxl)
 library(ggthemes)
 library(gt)
 library(gtExtras)
+library(bookdown)
+library(kableExtra)
 ```
 
 ```{r load and clean data, include=FALSE}
-colnames <- as.character(read_excel("qualtrics-data.xlsx", 
-                                    na = "",
+colnames <- as.character(read_excel('qualtrics-data.xlsx', 
+                                    na = '',
                                     n_max = 1, 
                                     col_names = FALSE)) # creates data frame of column names
 
-qualtrics_data <- read_excel("qualtrics-data.xlsx", 
+qualtrics_data <- read_excel('qualtrics-data.xlsx', 
                              skip = 2, # skips variable names and questions
-                             col_names = colnames) %>% # merges imported data `colnames`
-  filter(Status == "IP Address") # filter out SPAM and Survey Preview
+                             col_names = colnames) |> # merges imported data `colnames`
+  filter(Status == 'IP Address') # filter out SPAM and Survey Preview
 
 # restructure data
 # age and residents need to be converted to numeric
-qualtrics_data <- qualtrics_data %>% 
+qualtrics_data <- qualtrics_data |> 
   mutate(age = case_when(
-    grepl("[^0-9]", age) ~ "NA", # [^0-9] means "any character except the digits 0 - 9
+    grepl('[^0-9]', age) ~ 'NA', # [^0-9] means 'any character except the digits 0 - 9
     TRUE ~ age
-  )) %>% 
+  )) |> 
   mutate(age = as.numeric(age),
          residents = as.numeric(residents))
 ```
 
+\newpage
 
+# Executive Summary
+
+Steven Sainz, Camden Connection's CEO, submitted a draft plan of action to Darrell Moore at the Center for South Georgia Regional Impact regarding a needs assessment survey in October 2021. Darrell reached out to us shortly after and requested our assistance in conducting a needs assessment survey for Camden County, Georgia soon thereafter. We were later asked on April 18, 2022 to include survey questions that would be used to support their application for a Community Development Block Grant (CDBG) from Georgia Department of Community Affairs (DCA). The anonymous survey was approved by Valdosta State University's Institutional Review Board (IRB) in June 2022 and responses were gathered from June 27, 2022 through December 17, 2022. The survey received 722 responses, with 232 responses from the CDBG target area. This report outlines our survey methodology and the resulting analysis. 
 
 # Survey Methodology
 
-To be added by Keith over the weekend. 
+We followed DCA's "Guide to Acceptable Methodology and Sample Survey Form^[<https://www.dca.ga.gov/sites/default/files/guide_to_acceptable_survey_methodology_0.pdf>] to conduct the LMI study. While DCA prefers a survey of all residents, the study utilized a Qualtrics survey designed for an ARPA needs assessment, embedding specific questions to ascertain household size and household income. Specifically, respondents were asked how many residents lived in the house and a follow up question was asked whereby the respondent would answer if the household income was over or under a specified threshold. This is consistent with the methodology guide mentioned above (see page 3-4 for DCA's suggested procedures). The study used the income limits provided by the U.S. Department of HUD for Camden County, Georgia (see page 6).^[<https://www.dca.ga.gov/sites/default/files/2021_income_limits.pdf>] The LMI thresholds for Camden County are in Table \@ref(tab:limits).^[The "LOW INCOME" row contained in the income limits file represents the 80% AMI level for Camden County, which is the threshold for those households labeled as "moderate-income."]
 
 
+```{r lmi_df, include=FALSE}
+
+# Residents <- c('1', '2', '3', '4', '5', '6', '7', '8')
+# Threshold <- c('$37,050', '$42,350', '$47,650', '$52,900',
+#                      '$57,150', '$61,400', '$65,600', '$69,850')
+
+# lmi_table <- data.frame(Residents, Threshold)
+
+lmi_df <- data.frame(household = c('1', '2', '3', '4', 
+                                             '5', '6', '7', '8+'),
+                        threshold = c('$37,050', '$42,350', '$47,650', '$52,900', 
+                                            '$57,150', '$61,400', '$65,600', '$69,850'),
+                        check.names = FALSE)
+
+# lmi_table <- lmi_df |> 
+#   gt() |> 
+#   tab_header('Table 1: Income Limits') |> 
+#   cols_label(household = 'No. of Residents',
+#              threshold = 'LMI Threshold') |> 
+#   cols_align(align = 'center',
+#              columns = c(household,threshold))
+
+
+```
+
+
+
+```{r limits}
+knitr::kable(lmi_df, caption = 'LMI Threshold by Household Size',
+             col.names = c('Household Size',
+                           'Threshold'),
+             align = 'c',
+             longtable=T)
+```
+
+
+## Selecting the Survey Method
+
+The survey method selected was mail survey using utility billing. All households in Kingsland, Georgia received a QR code in their utility bill that could be used to access the survey. 
+
+## Developing a Questionnare
+
+We developed the survey using input from stakeholders in Camden County, primarily Steven Sainz. The survey questions were embedded into a broader, anonymous ARPA needs assessment survey. Therefore, we did not collect personal information for the study. Further, given the method of collection, multiple responses could have been provided from any given household. 
+
+## Selecting the Sample
+
+The universe for the study was residents in Kingsland, Georgia. The sample from the broader survey was pulled from respondents living in map area six or seven (see Figure \@ref(fig:survey)). 
+
+```{r survey, out.width = '75%', fig.align='center',fig.cap='Survey Map Insert'}
+knitr::include_graphics('images/survey-insert.png')
+```
+
+Map areas six and seven were selected based on the affected area for Camden Counties proposed CDBG-DR-Infrastructure project (see Figure  \@ref(fig:census)). 
+
+```{r census, out.width = '75%', fig.align='center',fig.cap = 'Census Tract in Proposed CDBG-DR-Infrastructure Project Area'}
+knitr::include_graphics('images/kingsland-service-area.PNG')
+```
+
+There are approximately 2,796 households in areas six and seven (see block contained in Figure \@ref(fig:census). Thus, the required sample size for the CDBG per Table 2 (page 6) in DCA's acceptable survey methodology instructions is 400 respondents. Unfortunately, the survey conducted only received 215 responses. 
+
+## Conducting the Survey
+
+As noted above, the survey was publicized through mail inserts. 
+
+## Determining the Results
+
+The results have been analyzed and parts A and B of the low- and moderate-income sheet are provided below. 
+
+## Documenting Your Effort
+
+Documentation can be found on Github.^[<https://github.com/keitheleejr/cc-arpa-cdbg-study>] The raw data is stored as an MS Excel file titled "qualtrics-data.xlsx".^[<https://github.com/keitheleejr/cc-arpa-cdbg-study/blob/main/qualtrics-data.xlsx>] We used R for the data analysis. The .rmd file is titled "dca-cdbg-analysis.Rmd."^[<https://github.com/keitheleejr/cc-arpa-cdbg-study/blob/main/dca-cdbg-analysis.Rmd>] 
 ```{r, lmi_survey_area}
-dca_cbdg_data <- qualtrics_data %>% 
-  mutate(lmi = coalesce(gfi1,gfi2,gfi3,gfi4,gfi5,gfi6,gfi7,gfi8)) %>% 
+dca_cbdg_data <- qualtrics_data |> 
+  mutate(lmi = coalesce(gfi1,gfi2,gfi3,gfi4,gfi5,gfi6,gfi7,gfi8)) |> 
   mutate(lmi_logical = case_when(
-    grepl("Greater", lmi) ~ "No", 
-    grepl("Less Than",lmi) ~ "Yes" ))
+    grepl('Greater', lmi) ~ 'No', 
+    grepl('Less Than',lmi) ~ 'Yes' ))
 
 
-# lmi_household <- as.data.frame(table(dca_cbdg_data$lmi_logical)) %>% 
-#   mutate(Percentage = round(Freq/sum(Freq)*100,2)) %>% 
+# lmi_household <- as.data.frame(table(dca_cbdg_data$lmi_logical)) |> 
+#   mutate(Percentage = round(Freq/sum(Freq)*100,2)) |> 
 #   arrange(desc(Percentage))
 # 
-# lmi_household_table <- lmi_household %>% 
-#   gt() %>% 
-#   cols_label(Var1 = "Response",
-#              Freq = "Count") %>% 
+# lmi_household_table <- lmi_household |> 
+#   gt() |> 
+#   cols_label(Var1 = 'Response',
+#              Freq = 'Count') |> 
 #   cols_align(
-#     align = "left",
+#     align = 'left',
 #     columns = Var1
 #   )
 # 
@@ -76,25 +156,26 @@ dca_cbdg_data <- qualtrics_data %>%
 
 
 ```{r, lmi_area_six}
-target_area <- dca_cbdg_data %>% 
-  filter(grepl("[6-7]",mapnumber),
+target_area <- dca_cbdg_data |> 
+  filter(grepl('[6-7]',mapnumber),
          ) 
 
-# area_six_lmi_household <- as.data.frame(table(target_area$lmi_logical)) %>% 
-#   mutate(Percentage = round(Freq/sum(Freq)*100,2)) %>% 
+# area_six_lmi_household <- as.data.frame(table(target_area$lmi_logical)) |> 
+#   mutate(Percentage = round(Freq/sum(Freq)*100,2)) |> 
 #   arrange(desc(Percentage))
 # 
-# area_six_lmi_household_table <- area_six_lmi_household %>% 
-#   gt() %>% 
-#   cols_label(Var1 = "Response",
-#              Freq = "Count") %>% 
+# area_six_lmi_household_table <- area_six_lmi_household |> 
+#   gt() |> 
+#   cols_label(Var1 = 'Response',
+#              Freq = 'Count') |> 
 #   cols_align(
-#     align = "left",
+#     align = 'left',
 #     columns = Var1
 #   )
 # 
 # area_six_lmi_household_table
 ```
+
 
 # Low- and moderate-income worksheet
 
@@ -102,15 +183,15 @@ target_area <- dca_cbdg_data %>%
 
 line_1 <- 2796
 
-line_2 <- target_area %>% filter(!is.na(lmi_logical)) %>% count()
+line_2 <- target_area |> filter(!is.na(lmi_logical)) |> count()
 
-line_3 <- target_area %>% filter(lmi_logical == "Yes") %>% count()
+line_3 <- target_area |> filter(lmi_logical == 'Yes') |> count()
 
-line_4 <- target_area %>% filter(lmi_logical == "Yes", !is.na(residents)) %>% summarize(sum(residents))
+line_4 <- target_area |> filter(lmi_logical == 'Yes', !is.na(residents)) |> summarize(sum(residents))
 
-line_5 <- target_area %>% filter(lmi_logical == "No") %>% count()
+line_5 <- target_area |> filter(lmi_logical == 'No') |> count()
 
-line_6 <- target_area %>% filter(lmi_logical == "No", !is.na(residents)) %>% summarize(sum(residents))
+line_6 <- target_area |> filter(lmi_logical == 'No', !is.na(residents)) |> summarize(sum(residents))
 
 line_7 <- line_4/line_3
 
@@ -190,17 +271,5 @@ line_16 <- line_13/line_15
 16. Divide Line 13 by Line 15, and multiply the resulting decimal by 100. (This is the estimated percentage of persons in your target area who have low and moderate Incomes.)  
 **`r round(line_16*100,2)`**  
 
-\newpage
 
-### Figure 1: Census Tract Reference for Service Area Household Estimate
-
-```{r, out.width = "75%", fig.align="center"}
-knitr::include_graphics("kingsland-service-area.PNG")
-```
-
-### Figure 2: Service Area Survey Question
-
-```{r, out.width = "75%", fig.align="center"}
-knitr::include_graphics("survey-insert.png")
-```
 
