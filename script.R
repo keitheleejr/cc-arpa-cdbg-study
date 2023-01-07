@@ -6,7 +6,9 @@ library(ggthemes)
 
 
 # load data
-qualtrics_data <- read_excel("qualtrics-data.xlsx")
+colnames <- as.character(read_excel("dec-qualtrics-data.xlsx", n_max = 1, col_names = FALSE))
+qualtrics_data <- read_excel("dec-qualtrics-data.xlsx", skip = 2, col_names = colnames) %>% 
+  filter(Status == "IP Address")
 
 # restructure data
 
@@ -40,6 +42,16 @@ qualtrics_data %>%
     labs(title = "There is _______ food in my home to satisfy \n the needs of those in my household",
        x = "",
        y = "")
+
+
+food_security_count <- qualtrics_data %>% 
+  filter(!is.na(food_security)) %>% 
+  group_by(food_security) %>% 
+  count()
+
+table(qualtrics_data$food_security)/sum(table(qualtrics_data$food_security))*100
+
+
 
 ggsave("food_security.png")
   
